@@ -56,11 +56,6 @@
    [(s-exp-match? `{super SYMBOL ANY} s)
     (superI (s-exp->symbol (second (s-exp->list s)))
             (parse (third (s-exp->list s))))]
-   ;; Impl. 2
-   [(s-exp-match? `{if0 ANY ANY ANY} s)
-    (if0I (parse (second (s-exp->list s)))
-          (parse (third (s-exp->list s)))
-          (parse (fourth (s-exp->list s))))]
    [else (error 'parse "invalid input")]))
 
 (module+ test
@@ -82,9 +77,6 @@
         (sendI (numI 1) 'm (numI 2)))
   (test (parse `{super m 1})
         (superI 'm (numI 1)))
-  ;; Impl. 2
-  (test (parse `{if0 1 2 3})
-        (if0I (numI 1) (numI 2) (numI 3)))
   (test/exn (parse `x)
             "invalid input")
 

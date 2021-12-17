@@ -2,8 +2,6 @@
 
 (define-type Exp
   (numE [n : Number])
-  ;; Impl.3
-  #;(idE [id-name : Symbol])
   (plusE [lhs : Exp]
          [rhs : Exp])
   (multE [lhs : Exp]
@@ -14,10 +12,6 @@
         [args : (Listof Exp)])
   (getE [obj-expr : Exp]
         [field-name : Symbol])
-  ;; Impl.5
-  #;(setE [obj-expr : Exp]
-        [field-name : Symbol]
-        [val-expr : Emp])
   (sendE [obj-expr : Exp]
          [method-name : Symbol]
          [arg-expr : Exp])
@@ -25,14 +19,10 @@
           [class-name : Symbol]
           [method-name : Symbol]
           [arg-expr : Exp])
-  ;; Impl.2
+  ;; Impl. 2
   (if0E [tst-expr : Exp]
         [thn-expr : Exp]
-        [els-expr : Exp])
-  ;; Impl.3
-  #;(letE [binding-name : Symbol] 
-        [rhs : Exp]
-        [body : Exp]))
+        [els-expr : Exp]))
 
 (define-type Class
   (classC [field-names : (Listof Symbol)]
@@ -45,18 +35,6 @@
 
 (module+ test
   (print-only-errors #t))
-
-;; ----------------------------------------
-#;(define-type Binding
-  (bind [name : Symbol]
-        [val : Value]))
-
-#;(define-type-alias Env (Listof Binding))
-
-#;(define-type-alias Env (Listof (Symbol * Value)))
-
-#;(define mt-env empty)
-#;(define extend-env cons)
 
 ;; ----------------------------------------
 
@@ -120,7 +98,7 @@
                  (define arg-val (recur arg-expr))]
            (call-method class-name method-name classes
                         obj arg-val))]
-        ;; Impl.2
+        ;; Impl. 2
         [(if0E tst-expr thn-expr els-expr)
          (type-case Value (recur tst-expr)
            [(numV n) (if (= n 0)

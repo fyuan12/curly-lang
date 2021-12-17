@@ -21,7 +21,6 @@
                    (rest (rest (rest (rest (rest (s-exp->list s)))))))))]
     [else (error 'parse-t-class "invalid input")]))
 
-;; used in parse-t-class
 (define (parse-t-field [s : S-Exp]) : (Symbol * Type)
   (cond
     [(s-exp-match? `[SYMBOL : ANY] s)
@@ -29,7 +28,6 @@
              (parse-type (third (s-exp->list s))))]
     [else (error 'parse-t-field "invalid input")]))
 
-;; used in parse-t-class
 (define (parse-t-method [s : S-Exp]) : (Symbol * MethodT)
   (cond
     [(s-exp-match? `[SYMBOL {[arg : ANY]} : ANY ANY] s)
@@ -42,7 +40,6 @@
                (parse (fourth (rest (s-exp->list s))))))]
     [else (error 'parse-t-method "invalid input")]))
 
-;; used in parse-type
 (define (parse-type [s : S-Exp]) : Type
   (cond
     [(s-exp-match? `num s)

@@ -85,56 +85,32 @@
        [else #f])]
     [else (equal? t1 t2)]))
 
-;; Impl. 2
-(define (have-least-supertype? t1 t2 t-classes)
-  (type-case Type t1
-    [(numT)
-     (type-case Type t2
-       [(numT) #t]
-       [else #f])]
-    [(objT name1)
-     (type-case Type t2
-       [(numT) #f]
-       [else
-        ;; check if t1 is 'Object
-        (if (equal? name1 'Object)
-            #f
-            ;; check if t1 is a subtype of t2
-            (if (is-subtype? t1 t2 t-classes)
-                #t
-                ;; check if t2 is a subtype of t1
-                (if (is-subtype? t2 t1 t-classes)
-                    #t
-                    ;; check if t1 and t2 have a common ancester througnh recursion
-                    (type-case ClassT (find t-classes name1)
-                      [(classT super-name fields methods)
-                       ;; check t1's supertype against t2
-                       (have-least-supertype? (objT super-name) t2 t-classes)]))))])]))
+(define (have-least-subtype))
 
-;; Impl. 2
+(define (have-least-supertype? t1 t2 t-classes)
+  (if (is-subtype? t1 t2 t-classes)
+      #t
+      (if (is-subtype? t2 t1 t-classes)
+          #t
+          ;; check if they have common a common ancester
+          (type-case Type t1
+            [(objT name1)
+             (type-case Type t2
+               [(objT names2)
+        
+                ]
+               [else #f])]
+            [else (equal? t1 t2)])
+          ))
+  )
+
 (define (get-least-supertype t1 t2 t-classes)
-  (type-case Type t1
-    [(numT) (numT)]
-    [(objT name1)
-     ;; check if t1 is a subtype of t2, , if so return t2
-     (if (is-subtype? t1 t2 t-classes)
-         t2
-         ;; check if t2 is a subtype of t1, , if so return t1
-         (if (is-subtype? t2 t1 t-classes)
-             t1
-             ;; check if t1 and t2 have a common ancester througnh recursion
-             (type-case ClassT (find t-classes name1)
-               [(classT super-name fields methods)
-                ;; check if t1's supertype against t2
-                (get-least-supertype (objT super-name) t2 t-classes)])))]))
+  )
+
 
 (module+ test
   (define a-t-class (values 'A (classT 'Object empty empty)))
   (define b-t-class (values 'B (classT 'A empty empty)))
-  (define c-t-class (values 'C (classT 'B empty empty)))
-  (define e-t-class (values 'D (classT 'B empty empty)))
-  (define d-t-class (values 'E (classT 'Object empty empty)))
-  (define t-classes (list a-t-class b-t-class c-t-class d-t-class e-t-class))
 
   (test (is-subclass? 'Object 'Object empty)
         #t)
@@ -152,31 +128,7 @@
   (test (is-subtype? (objT 'A) (objT 'B) (list a-t-class b-t-class))
         #f)
   (test (is-subtype? (objT 'B) (objT 'A) (list a-t-class b-t-class))
-        #t)
-  
-  ;; Impl. 2
-  (test (have-least-supertype? (numT) (numT) t-classes)
-        #t)
-  (test (have-least-supertype? (numT) (objT 'A) t-classes)
-        #f)
-  (test (have-least-supertype? (objT 'A) (numT) t-classes)
-        #f)
-  (test (have-least-supertype? (objT 'A) (objT 'B) t-classes)
-        #t)
-  (test (have-least-supertype? (objT 'B) (objT 'A) t-classes)
-        #t)
-  (test (have-least-supertype? (objT 'C) (objT 'E) t-classes)
-        #f)
-  (test (have-least-supertype? (objT 'A) (objT 'C) t-classes)
-        #t)
-  (test (get-least-supertype (numT) (numT) t-classes)
-        (numT))
-  (test (get-least-supertype (objT 'A) (objT 'C) t-classes)
-        (objT 'A))
-  (test (get-least-supertype (objT 'C) (objT 'A) t-classes)
-        (objT 'A))
-  (test (get-least-supertype (objT 'C) (objT 'D) t-classes)
-        (objT 'B)))
+        #t))
 
 ;; typecheck exprs
 ;; ----------------------------------------
@@ -238,17 +190,14 @@
                            t-classes))]
         ;; Impl. 2
         [(if0I tst-expr thn-expr els-expr)
-         (type-case Type (recur tst-expr) 
+         (type-case Type (recur tst-exspr))
          [(numT)
-          (local
-            [(define thn (recur thn-expr))
-             (define els (recur els-expr))]
-            ;; thn-expr and els-expr have share a super type
-            (if (have-least-supertype? thn els t-classes)
-                (get-least-supertype thn els t-classes)
-                (type-error thn-expr "then/else type mismatch")))]
+          ;; thn-expr and els-expr have share a super type
+          (if (have-least-supertype? (recur thn-expr) (recur els-expr))
+              (get-least-supertype)
+              (type-error thn-expr "then/else type mismatch"))]
          [else
-          (type-error tst-expr "num")])]))))
+          (type-error tst-expr "num")]]))))
 
 ;; typecheck sendI and ssendI in typecheck-expr
 (define (typecheck-send [class-name : Symbol]
@@ -378,11 +327,6 @@
                    empty)
         (numT))
 
-  ;; Impl. 2
-  (test (typecheck (if0I (numI 0) (numI 1) (numI 2))
-                   empty)
-        (numT))
-  
   (test/exn (typecheck-posn (sendI (numI 10) 'mdist (numI 0)))
             "no type")
   (test/exn (typecheck-posn (sendI new-posn27 'mdist new-posn27))
@@ -420,12 +364,7 @@
                                                       (methodT (numT) (numT)
                                                                ;; No such method in superclass:
                                                                (superI 'm (numI 0)))))))))
-            "not found")
-  ;; Impl. 2
-  (test/exn (typecheck-posn (if0I new-posn27 (numI 1) (numI 2)))
-            "no type")
-  (test/exn (typecheck-posn (if0I (numI 1) new-posn27 (numI 2)))
-            "then/else type mismatch"))
+            "not found"))
 
 ;; ----------------------------------------
 
